@@ -117,6 +117,9 @@ def get_news(robot):
             news = listeTitle[i]
         else:
             news = news + random.choice(bridge) + listeTitle[i]
+
+    # replace some special characters
+    news = news.replace("ä","ae").replace("Ä","Äe").replace("ö","oe").replace("Ö","oe").replace("ü","ue").replace("Ü","ue")
     
     to_say = intro + news
     say_text(robot, to_say)
