@@ -112,10 +112,11 @@ def get_news(robot):
     for post in feed.entries:
         listeTitle.append(post.title)
        
-    while say_count < news_count:
-        news = news + listeTitle[say_count] + random.choice(bridge)
-        say_count = say_count+1
-        news = news + listeTitle[say_count+1]
+    for i in range(news_count):
+        if i == 0:
+            news = listeTitle[i]
+        else:
+            news = news + random.choice(bridge) + listeTitle[i]
     
     to_say = intro + news
     say_text(robot, to_say)
