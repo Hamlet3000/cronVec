@@ -7,4 +7,4 @@ It also checks every 2 minutes whether you have received a new email.
 When he sits on his charging station and is fully charged while he sees a face, he starts to play.
 
 The 2-minute cron job between 6 a.m. and 9 p.m. works well for me. e.g.
-* / 2 6-21 * * * /home/ubuntu/cronVec/cronVec.py
+* */ 2 6-21 * * * /home/ubuntu/cronVec/cronVec.py
