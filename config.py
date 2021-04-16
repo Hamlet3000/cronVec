@@ -1,5 +1,5 @@
 api_weather = "YOUR_WEATHER_API_KEY"             # The api Key from openweathermap.org
-weather_location = "Munich"                      # Enter your city name (this is for the weather)
+weather_location = "Munich"                      # Location can be city, state; city, country; zip code. (this is for the weather)
 news_count = 3                                   # How many news stories Vector should read (max is 7 to 9)
 temperature = "metric"                           # Enter "imperial" or "metric"
 news_feed = "YOUR_NEWS_FEED"                     # You can use any rss feed for this
