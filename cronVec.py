@@ -54,7 +54,7 @@ def average(number1, number2):
 def get_weather(robot):
     
     try:
-        #location can be city, state; city, country; zip code.
+        # location can be city, state; city, country; zip code.
         url = f"http://api.openweathermap.org/data/2.5/forecast?APPID={config.api_weather}&q={config.weather_location}&units={config.temperature}"
         req = urllib.request.Request(
             url,
