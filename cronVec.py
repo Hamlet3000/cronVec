@@ -3,20 +3,15 @@ import random
 import urllib
 import feedparser
 import json
-import csv
 import config
-import os, sys, traceback
+import os
 import email
 import imaplib
 import anki_vector
-from anki_vector.events import Events
 from anki_vector.faces import Face
-from anki_vector.util import degrees, distance_mm, speed_mmps
-from anki_vector import audio
-from anki_vector.connection import ControlPriorityLevel
-from anki_vector.user_intent import UserIntent, UserIntentEvent
-from anki_vector.objects import CustomObjectMarkers, CustomObjectTypes
 
+
+LAST_NAME = ""
 
 # get the path of the local files
 pyPath = os.path.realpath(__file__)
@@ -107,8 +102,8 @@ def get_news(robot):
     news = ""
     news_count = config.news_count
     feed = feedparser.parse(config.news_feed)
-    
     listeTitle = []
+    
     for post in feed.entries:
         listeTitle.append(post.title)
        
@@ -118,20 +113,17 @@ def get_news(robot):
         else:
             news = news + random.choice(bridge) + listeTitle[i]
 
-    # replace some special characters
-    news = news.replace("ä","ae").replace("Ä","Äe").replace("ö","oe").replace("Ö","oe").replace("ü","ue").replace("Ü","ue")
-    
     to_say = intro + news
     say_text(robot, to_say)
 
 ###############################################################################
 def get_fact(robot):
 
-    intro = "I have an interesting fact for you. "
+    intro = "I have an interesting fact for you REPLACENAMEVAR. "
     num = len(facts)
     my_rand = random.randint(0,num-1)
     raw_fact = facts[my_rand]
-    outro = " interesting, right?"
+    outro = ". interesting, right?"
     to_say = intro + raw_fact + outro
     say_text(robot, to_say)
 
@@ -139,8 +131,8 @@ def get_fact(robot):
 def get_joke(robot):
 
     intro = []
-    intro.append("Do you already know this one? ")
-    intro.append("I will tell you a joke. ")
+    intro.append("Do you already know this one REPLACENAMEVAR? ")
+    intro.append("REPLCAENAMEVAR I will tell you a joke. ")
     intro.append("Coz-mo told me a funny joke. ")
     intro.append("I know a funny joke. ")
     rnd_intro = random.choice(intro)
@@ -161,7 +153,7 @@ def get_joke(robot):
     robot.anim.play_animation(random.choice(joke_anim))
 
     outro = []
-    outro.append(" wasn't that funny?")
+    outro.append(" wasn't that funny REPLACENAMEVAR?")
     outro.append(" hiie hiie hiie")
     outro.append(" that was funny!")
     outro.append(" funny...")
@@ -187,10 +179,10 @@ def get_time(robot):
 def get_greeting(robot):
 
     text = []
-    text.append("Hey, what's up?")
-    text.append("Hey, how are you?")
-    text.append("Oooh, my favorite human!")
-    text.append("Hi, nice to see you.")
+    text.append("Hey REPLACENAMEVAR, what's up?")
+    text.append("Hey REPLCAENAMEVAR, how are you?")
+    text.append("Oooh REPLACENAMEVAR, my favorite human!")
+    text.append("Hi REPLACENAMEVAR, nice to see you.")
     
     to_say = random.choice(text)
     say_text(robot, to_say)
@@ -238,10 +230,11 @@ def get_email(robot):
 def wake_up(robot):
 
     text = []
-    text.append("I have enough energy to play now.")
+    text.append("I have enough energy to play now REPLACENAMEVAR.")
     text.append("Now I'm fully charged.")
     text.append("My Battery is fully charged now.")
     text.append("I had a good recharging nap.")
+    text.append("Now I'm ready to play REPLACENAMEVAR.")
     
     to_say = random.choice(text)
     say_text(robot, to_say)
@@ -251,6 +244,18 @@ def wake_up(robot):
 
 ###############################################################################
 def say_text(robot, to_say):
+    global LAST_NAME
+
+    # replace special characters
+    to_say = to_say.replace("ä","ae").replace("Ä","Äe").replace("ö","oe").replace("Ö","oe").replace("ü","ue").replace("Ü","ue").replace("ß","ss")
+
+    # TODO maybe remove some other unknown characters
+#    listeSonderzeichen = ["ä", "ö", "ü", "ß"]
+#    for sonderzeichen in listeSonderzeichen:
+#       news = news.replace(sonderzeichen, " ")
+
+    # when person is recognized, say their name
+    to_say = to_say.replace("REPLACENAMEVAR",LAST_NAME)
 
     # Slow voice down slightly to make him easier to understand
     robot.behavior.say_text(to_say, duration_scalar=1.15) 
@@ -269,22 +274,20 @@ def run_behavior(robot, arg_name):
 ###############################################################################
 # MAIN
 def main():
+    global LAST_NAME
 
     with anki_vector.Robot(enable_face_detection=True) as robot:
        
         # check e-mail
         get_email(robot)
         
-        #run_behavior(robot, "news")
-        #return
-
-
         # only if Vector sees a face
         last_face = ""
         seen_faces = robot.world.visible_faces
         for face in seen_faces:
             last_face = face.face_id
-            
+            LAST_NAME = face.name
+
         if last_face == "":
             return
 
