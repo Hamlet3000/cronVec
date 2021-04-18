@@ -323,7 +323,7 @@ def say_text(robot, to_say):
 #       news = news.replace(sonderzeichen, " ")
 
 
-    print(">>>" + LAST_NAME + "<<<")
+    # print(">>>" + LAST_NAME + "<<<")
 
     # when person is recognized, say their name
     to_say = to_say.replace("REPLACENAMEVAR",LAST_NAME)
