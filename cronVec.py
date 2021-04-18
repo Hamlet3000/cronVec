@@ -10,39 +10,30 @@ import imaplib
 import anki_vector
 from anki_vector.faces import Face
 
-
 LAST_NAME = ""
 
-# get the path of the local files
-pyPath = os.path.realpath(__file__)
-pyPath1 = os.path.dirname(pyPath)
-jokesPath = os.path.join(pyPath1, "jokes.txt")
-factsPath = os.path.join(pyPath1, "facts.txt")
-
-# Load the jokes into a list called 'jokes'. Try local, then download. Need to figure out a better way to do do this... 
-try:
-    with open(jokesPath, 'r') as f:
-        jokes = [line.rstrip('\n') for line in f]
-except:
-    jokes = ["I forgot what I want to say"]
-
-# Load the facts into a list called 'facts'. Try local, then download. Need to figure out a better way to do do this... 
-try:
-    with open(factsPath, 'r') as f:
-        facts = [line.rstrip('\n') for line in f]
-except:
-    facts = ["I forgot what I want to say"]
-
-
 ###############################################################################
+# public function: average --
+#
+# Arguments:
+#
+# Result:
+#
 def average(number1, number2):
     return (number1 + number2) / 2
 
 ###############################################################################
+# public function: get_weather --
+#   gets the weather form openweathermap.org and let Vector say it
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def get_weather(robot):
     
     try:
-        # location can be city, state; city, country; zip code.
         url = f"http://api.openweathermap.org/data/2.5/forecast?APPID={config.api_weather}&q={config.weather_location}&units={config.temperature}"
         req = urllib.request.Request(
             url,
@@ -82,6 +73,14 @@ def get_weather(robot):
     say_text(robot, to_say)
 
 ###############################################################################
+# public function: get_weather --
+#   gets the news form a rss feed from the config file and let Vector say it
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def get_news(robot):
 
     say_count = 0
@@ -105,17 +104,64 @@ def get_news(robot):
     say_text(robot, to_say)
 
 ###############################################################################
+# public function: load_file --
+#   Load jokes or facts from file into a list called 'text"
+#
+# Arguments:
+#   jf = jokes or facts
+#
+# Result:
+#   text = list of jokes or facts
+#
+def load_file(jf):
+
+    pyPath = os.path.realpath(__file__)
+    pyPath1 = os.path.dirname(pyPath)
+
+    if jf == "jokes":
+        filePath = os.path.join(pyPath1, "jokes.txt")
+    else:
+        filePath = os.path.join(pyPath1, "facts.txt")
+
+    # Load jokes or facts into a list called 'text"
+    try:
+        with open(filePath, 'r') as f:
+            text = [line.rstrip('\n') for line in f]
+    except:
+        text = ["oh... I forgot what I want to say"]
+
+    return text
+
+###############################################################################
+# public function: get_fact --
+#   lets Vecor tell a random fact
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def get_fact(robot):
 
     intro = "I have an interesting fact for you REPLACENAMEVAR. "
+
+    facts = load_file("facts")
+
     num = len(facts)
     my_rand = random.randint(0,num-1)
     raw_fact = facts[my_rand]
-    outro = ". interesting, right?"
-    to_say = intro + raw_fact + outro
+    to_say = intro + raw_fact
     say_text(robot, to_say)
 
 ###############################################################################
+# public function: get_joke --
+#   lets Vecor tell a random joke and giggle
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def get_joke(robot):
 
     intro = []
@@ -124,7 +170,9 @@ def get_joke(robot):
     intro.append("Coz-mo told me a funny joke. ")
     intro.append("I know a funny joke. ")
     rnd_intro = random.choice(intro)
-    
+   
+    jokes = load_file("jokes")
+
     num = len(jokes)
     my_rand = random.randint(0,num-1)
     raw_joke = jokes[my_rand]
@@ -140,16 +188,15 @@ def get_joke(robot):
     
     robot.anim.play_animation(random.choice(joke_anim))
 
-    outro = []
-    outro.append(" wasn't that funny REPLACENAMEVAR?")
-    outro.append(" hiie hiie hiie")
-    outro.append(" that was funny!")
-    outro.append(" funny...")
-    rnd_outro = random.choice(outro)
-    say_text(robot, rnd_outro)
-
-
 ###############################################################################
+# public function: get_time --
+#   lets Vecor tell the current time
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def get_time(robot):
 
     intro = []
@@ -164,6 +211,14 @@ def get_time(robot):
     say_text(robot, to_say)
 
 ###############################################################################
+# public function: get_greeting --
+#   lets Vecor greet you
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def get_greeting(robot):
 
     text = []
@@ -176,7 +231,14 @@ def get_greeting(robot):
     say_text(robot, to_say)
 
 ###############################################################################
-# Check for new E-Mails
+# public function: get_mail --
+#   lets Vecor check your e-mails
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def get_email(robot):
     
     mail_imap = config.mail_imap
@@ -215,6 +277,14 @@ def get_email(robot):
 
 
 ###############################################################################
+# public function: wake_up --
+#   lets Vecor say a text and drive off his charger
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
 def wake_up(robot):
 
     text = []
@@ -231,6 +301,16 @@ def wake_up(robot):
     robot.behavior.drive_off_charger()
 
 ###############################################################################
+# public function: say_text --
+#   replaces some special characters, replace name if found, slow down Vectors
+#   voice and let him say a text
+#
+# Arguments:
+#   robot = Vector object
+#   to_say = text that Vector should say
+#
+# Result:
+#
 def say_text(robot, to_say):
     global LAST_NAME
 
@@ -242,6 +322,9 @@ def say_text(robot, to_say):
 #    for sonderzeichen in listeSonderzeichen:
 #       news = news.replace(sonderzeichen, " ")
 
+
+    print(">>>" + LAST_NAME + "<<<")
+
     # when person is recognized, say their name
     to_say = to_say.replace("REPLACENAMEVAR",LAST_NAME)
 
@@ -249,6 +332,15 @@ def say_text(robot, to_say):
     robot.behavior.say_text(to_say, duration_scalar=1.15) 
 
 ###############################################################################
+# public function: run_behavior --
+#   distinguishes between the different behaviors
+#
+# Arguments:
+#   robot = Vector object
+#   arg_name = could be: pass, greeting, time, joke, fact, news, weather
+#
+# Result:
+#
 def run_behavior(robot, arg_name):
 
     if arg_name == "pass"     : return
@@ -260,7 +352,13 @@ def run_behavior(robot, arg_name):
     if arg_name == "weather"  : get_weather(robot)
 
 ###############################################################################
-# MAIN
+# public function: main --
+#   checks e-mail, when Vector sees a face do some random stuff
+#
+# Arguments:
+#
+# Result:
+#
 def main():
     global LAST_NAME
 
@@ -268,6 +366,9 @@ def main():
        
         # check e-mail
         get_email(robot)
+
+        #run_behavior(robot, "joke")
+        #return
         
         # only if Vector sees a face
         last_face = ""
