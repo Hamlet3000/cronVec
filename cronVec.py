@@ -24,26 +24,14 @@ try:
     with open(jokesPath, 'r') as f:
         jokes = [line.rstrip('\n') for line in f]
 except:
-    print("Downloading jokes from Website...")
-    jokes = []
-    content=urllib.request.urlopen("http://www.cuttergames.com/vector/jokes.txt") 
-    
-    for line in content:
-        line = line.decode("utf-8")
-        jokes.append(line.rstrip('\n'))
+    jokes = ["I forgot what I want to say"]
 
 # Load the facts into a list called 'facts'. Try local, then download. Need to figure out a better way to do do this... 
 try:
     with open(factsPath, 'r') as f:
         facts = [line.rstrip('\n') for line in f]
 except:
-    print("Downloading facts from Website...")
-    facts = []
-    content=urllib.request.urlopen("http://www.cuttergames.com/vector/facts.txt") 
-    
-    for line in content:
-        line = line.decode("utf-8")
-        facts.append(line.rstrip('\n'))
+    facts = ["I forgot what I want to say"]
 
 
 ###############################################################################
