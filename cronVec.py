@@ -166,7 +166,7 @@ def get_joke(robot):
 
     intro = []
     intro.append("Do you already know this one REPLACENAMEVAR? ")
-    intro.append("REPLCAENAMEVAR I will tell you a joke. ")
+    intro.append("REPLACENAMEVAR I will tell you a joke. ")
     intro.append("Coz-mo told me a funny joke. ")
     intro.append("I know a funny joke. ")
     rnd_intro = random.choice(intro)
@@ -223,7 +223,7 @@ def get_greeting(robot):
 
     text = []
     text.append("Hey REPLACENAMEVAR, what's up?")
-    text.append("Hey REPLCAENAMEVAR, how are you?")
+    text.append("Hey REPLACENAMEVAR, how are you?")
     text.append("Oooh REPLACENAMEVAR, my favorite human!")
     text.append("Hi REPLACENAMEVAR, nice to see you.")
     
