@@ -396,13 +396,13 @@ def on_publish(client, userdata, mid):
 def do_mqtt(data):
         
    # define variables for MQTT
-   MQTT_HOST = "YOUR_MQTT_BROKER_IP"
+   MQTT_HOST = config.mqtt_broker_ip
    MQTT_TOPIC = "Vector"
    MQTT_PORT = 1883
    MQTT_KEEPALIVE_INTERVAL = 20
-   MQTT_USER = "YOUR_MQTT_USER"
-   MQTT_PW = "YOUR_MQTT_PW"
-   
+   MQTT_USER = config.mqtt_user
+   MQTT_PW = config.mqtt_pw
+
    # Convert it to text? Not sure why I did this but it works. Yay, 1am programming.
    MQTT_MSG = str(data)
 
