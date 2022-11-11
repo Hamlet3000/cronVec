@@ -7,13 +7,14 @@ import config
 import os
 import email
 import imaplib
+import paho.mqtt.client as mqtt
 import anki_vector
 from anki_vector.faces import Face
 
 LAST_NAME = ""
 
 ###############################################################################
-# public function: average --
+# average --
 #
 # Arguments:
 #
@@ -23,7 +24,7 @@ def average(number1, number2):
     return (number1 + number2) / 2
 
 ###############################################################################
-# public function: get_weather --
+# get_weather --
 #   gets the weather form openweathermap.org and let Vector say it
 #
 # Arguments:
@@ -43,7 +44,7 @@ def get_weather(robot):
         data = urllib.request.urlopen(req).read()
         output = json.loads(data)
 
-        section =output["list"][0]
+        section = output["list"][0]
         forecast_condition = section["weather"][0]["description"]
         forecast_humidity = section["main"]["humidity"]
         forecast_temp = output["list"][0]["main"]["temp"]
@@ -73,7 +74,7 @@ def get_weather(robot):
     say_text(robot, to_say)
 
 ###############################################################################
-# public function: get_weather --
+# get_weather --
 #   gets the news form a rss feed from the config file and let Vector say it
 #
 # Arguments:
@@ -85,15 +86,16 @@ def get_news(robot):
 
     say_count = 0
     intro = "Here comes the news. "
-    bridge = [". And in other news. ", ". In OTHER news... ", ". Taking a look at other news. ", ". Here is another news item. ", ". Here is an interesting story. "]
+    bridge = [". And in other news. ", ". In OTHER news... ", ". Taking a look at other news. ", ". Here is another news item. "]
     news = ""
     news_count = config.news_count
     feed = feedparser.parse(config.news_feed)
     listeTitle = []
-    
+   
     for post in feed.entries:
         listeTitle.append(post.title)
        
+
     for i in range(news_count):
         if i == 0:
             news = listeTitle[i]
@@ -104,7 +106,7 @@ def get_news(robot):
     say_text(robot, to_say)
 
 ###############################################################################
-# public function: load_file --
+# load_file --
 #   Load jokes or facts from file into a list called 'text"
 #
 # Arguments:
@@ -133,7 +135,7 @@ def load_file(jf):
     return text
 
 ###############################################################################
-# public function: get_fact --
+# get_fact --
 #   lets Vecor tell a random fact
 #
 # Arguments:
@@ -154,7 +156,7 @@ def get_fact(robot):
     say_text(robot, to_say)
 
 ###############################################################################
-# public function: get_joke --
+# get_joke --
 #   lets Vecor tell a random joke and giggle
 #
 # Arguments:
@@ -189,7 +191,7 @@ def get_joke(robot):
     robot.anim.play_animation(random.choice(joke_anim))
 
 ###############################################################################
-# public function: get_time --
+# get_time --
 #   lets Vecor tell the current time
 #
 # Arguments:
@@ -211,7 +213,7 @@ def get_time(robot):
     say_text(robot, to_say)
 
 ###############################################################################
-# public function: get_greeting --
+# get_greeting --
 #   lets Vecor greet you
 #
 # Arguments:
@@ -231,7 +233,7 @@ def get_greeting(robot):
     say_text(robot, to_say)
 
 ###############################################################################
-# public function: get_mail --
+# get_mail --
 #   lets Vecor check your e-mails
 #
 # Arguments:
@@ -247,6 +249,7 @@ def get_email(robot):
 
     mail = imaplib.IMAP4_SSL(mail_imap)
     mail.login(mail_account, mail_pw)
+
     mail.list()
     mail.select('inbox')
     result, data = mail.uid('search', None, "UNSEEN") # (ALL/UNSEEN)
@@ -277,7 +280,153 @@ def get_email(robot):
 
 
 ###############################################################################
-# public function: wake_up --
+# get_mqtt_info --
+#   gets battery info and state for publish for mqtt
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
+def get_mqtt_info(robot):
+   #voltage = 0
+   #batlevel = 0
+   #charging = 0
+   #docked = 0
+   #status = "error"
+
+   battery_state = robot.get_battery_state()
+   voltage  = battery_state.battery_volts
+   batlevel = battery_state.battery_level
+   charging = battery_state.is_charging
+   docked   = battery_state.is_on_charger_platform
+   status   = get_vector_status(robot)
+   ltime = time.strftime("%d.%m.%Y %H:%M:%S")
+
+   # In the openHAB channel, use a jsonpath transform to get specific values like this: JSONPATH:$..voltage
+   data = {}
+   data['robots'] = []
+   data['robots'].append({
+       'name': 'Vector Green',
+       'voltage': voltage,
+       'batlevel': batlevel,
+       'charging': charging,
+       'docked': docked,
+       'time': ltime,
+       'status': status
+   })
+                  
+   # Configure and publish data to mqtt
+   do_mqtt(data)
+
+
+###############################################################################
+# get_vector_status --
+#   returns what ever Vector ist doing right now
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#   status = what Vector ist doing
+#
+def get_vector_status(robot):
+
+   status = "error"
+   if robot.status.are_motors_moving:
+      status = "Vector is moving"
+   if robot.status.are_wheels_moving:
+      status = "Vector's wheels are moving"
+   if robot.status.is_animating:
+      status = "Vector is animating"
+   if robot.status.is_being_held:
+      status = "Vector is being held"
+   if robot.status.is_button_pressed:
+      status = "Vector's button was button pressed"
+   if robot.status.is_carrying_block:
+      status = "Vector is carrying his block"
+   if robot.status.is_charging:
+      status = "Vector is currently charging"
+   if robot.status.is_cliff_detected:
+      status = "Vector has detected a cliff"
+   if robot.status.is_docking_to_marker:
+      status = "Vector has found a marker and is docking to it"
+   if robot.status.is_falling:
+      status = "Vector is falling"
+   if robot.status.is_head_in_pos:
+      status = "Vector's head is in position"
+   if robot.status.is_in_calm_power_mode:
+      status = "Vector is in calm power mode"
+   if robot.status.is_lift_in_pos:
+      status = "Vector's arm is in position"
+   if robot.status.is_on_charger:
+      status = "Vector is on the charger"
+   if robot.status.is_pathing:
+      status = "Vector is traversing a path"
+   if robot.status.is_picked_up:
+      status = "Vector is picked up"
+   if robot.status.is_robot_moving:
+      status = "Vector is in motion"
+
+   return status
+
+###############################################################################
+# on_publish --
+#   when mqtt is publishing
+#
+# Arguments:
+#   client
+#   userdata
+#   mid
+#
+# Result:
+#
+def on_publish(client, userdata, mid):
+        print("Message published to broker")
+
+###############################################################################
+# do_mqtt --
+#   configure everything for mqtt and publish
+#
+# Arguments:
+#   data = data to publis
+#
+# Result:
+#
+def do_mqtt(data):
+        
+   # define variables for MQTT
+   MQTT_HOST = "192.168.0.7"
+   MQTT_TOPIC = "Vector"
+   MQTT_PORT = 1883
+   MQTT_KEEPALIVE_INTERVAL = 20
+   MQTT_USER = "openhabian"
+   MQTT_PW = "tBpr&r4op"
+   
+   # Convert it to text? Not sure why I did this but it works. Yay, 1am programming.
+   MQTT_MSG = str(data)
+
+   # Initiate MQTT Client
+   mqttc = mqtt.Client()
+
+   # Set username and password for the Broker
+   #mqttc.username_pw_set(MQTT_USER, MQTT_PW)
+
+   # Register publish callback function
+   #mqttc.on_publish = on_publish
+
+   # Connect with MQTT Broker
+   mqttc.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
+
+   # Publish message to MQTT Broker
+   mqttc.publish(MQTT_TOPIC,MQTT_MSG)
+
+   # Disconnect from MQTT_Broker
+   mqttc.disconnect()
+
+
+###############################################################################
+# wake_up --
 #   lets Vecor say a text and drive off his charger
 #
 # Arguments:
@@ -301,7 +450,7 @@ def wake_up(robot):
     robot.behavior.drive_off_charger()
 
 ###############################################################################
-# public function: say_text --
+# say_text --
 #   replaces some special characters, replace name if found, slow down Vectors
 #   voice and let him say a text
 #
@@ -323,7 +472,7 @@ def say_text(robot, to_say):
 #       news = news.replace(sonderzeichen, " ")
 
 
-    # print(">>>" + LAST_NAME + "<<<")
+#    print(">>>" + LAST_NAME + "<<<")
 
     # when person is recognized, say their name
     to_say = to_say.replace("REPLACENAMEVAR",LAST_NAME)
@@ -332,7 +481,7 @@ def say_text(robot, to_say):
     robot.behavior.say_text(to_say, duration_scalar=1.15) 
 
 ###############################################################################
-# public function: run_behavior --
+# run_behavior --
 #   distinguishes between the different behaviors
 #
 # Arguments:
@@ -344,15 +493,74 @@ def say_text(robot, to_say):
 def run_behavior(robot, arg_name):
 
     if arg_name == "pass"     : return
-    if arg_name == "greeting" : get_greeting(robot)
-    if arg_name == "time"     : get_time(robot) 
-    if arg_name == "joke"     : get_joke(robot)
-    if arg_name == "fact"     : get_fact(robot)
-    if arg_name == "news"     : get_news(robot)
     if arg_name == "weather"  : get_weather(robot)
+    if arg_name == "time"     : get_time(robot) 
+    if arg_name == "fact"     : get_fact(robot)
+    if arg_name == "joke"     : get_joke(robot)
+    if arg_name == "news"     : get_news(robot)
+    if arg_name == "greeting" : get_greeting(robot)
+
 
 ###############################################################################
-# public function: main --
+# is_allowed --
+#   checks if the action may be executed
+#
+# Arguments:
+#   reaction = could be: greeting, time, joke, fact, news, weather
+#
+# Result:
+#
+def is_allowed(reaction):
+
+    timestamp = time.time()
+
+    try:
+        timedict = json.load(open("timestamps.txt"))
+    except:
+        timedict={"greeting" : 0,
+                  "news" : 0,
+                  "joke" : 0,
+                  "fact" : 0,
+                  "time" : 0,
+                  "weather" : 0}
+
+    timediff = timestamp - timedict[reaction]
+    mintime = get_mintime(reaction)
+
+    if timediff > mintime:
+       timedict.update({reaction: timestamp})
+       json.dump(timedict, open("timestamps.txt",'w'))
+       return 1
+    else:
+       return 0
+
+###############################################################################
+# get_mintime --
+#   the minimum time that must elapse to perform the same action again
+#
+# Arguments:
+#   reaction = could be: greeting, time, joke, fact, news, weather
+#
+# Result:
+#   time in seconds
+#
+def get_mintime(reaction):
+    if reaction == "greeting":
+        return 180 # 3 minutes
+    elif reaction == "news":
+        return 900 # 15 minutes
+    elif reaction == "joke":
+        return 300 # 5 minutes
+    elif reaction == "fact":
+        return 300 # 5 minutes
+    elif reaction == "time":
+        return 1800 # 30 minutes
+    elif reaction == "weather":
+        return 1800 # 30 minutes
+
+
+###############################################################################
+# main --
 #   checks e-mail, when Vector sees a face do some random stuff
 #
 # Arguments:
@@ -362,12 +570,16 @@ def run_behavior(robot, arg_name):
 def main():
     global LAST_NAME
 
-    with anki_vector.Robot(enable_face_detection=True) as robot:
-       
+    with anki_vector.Robot(enable_face_detection=True,
+                           cache_animation_lists=False) as robot:
+
         # check e-mail
         get_email(robot)
 
-        #run_behavior(robot, "joke")
+        # publish mqtt infos
+        get_mqtt_info(robot)
+
+        #run_behavior(robot, "news")
         #return
         
         # only if Vector sees a face
@@ -391,7 +603,8 @@ def main():
         # do random stuff
         reaction = ["greeting", "news", "joke", "fact", "time", "weather"]
         rnd_reaction = random.choice(reaction)
-        run_behavior(robot, rnd_reaction)
+        if is_allowed(rnd_reaction):
+           run_behavior(robot, rnd_reaction)
 
 
 ###############################################################################
