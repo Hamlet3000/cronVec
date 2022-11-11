@@ -33,7 +33,12 @@ def average(number1, number2):
 # Result:
 #
 def get_weather(robot):
-    
+   
+    if config.api_weather == "":
+        return
+    if config.api_weather == "YOUR_WEATHER_API_KEY":
+        return
+       
     try:
         url = f"http://api.openweathermap.org/data/2.5/forecast?APPID={config.api_weather}&q={config.weather_location}&units={config.temperature}"
         req = urllib.request.Request(
@@ -83,6 +88,11 @@ def get_weather(robot):
 # Result:
 #
 def get_news(robot):
+
+    if config.news_feed == "":
+        return
+    if config.news_feed == "YOUR_NEWS_FEED":
+        return
 
     say_count = 0
     intro = "Here comes the news. "
@@ -242,7 +252,12 @@ def get_greeting(robot):
 # Result:
 #
 def get_email(robot):
-    
+   
+    if config.mail_account == "":
+        return
+    if config.mail_account == "YOUR_E_MAIL":
+        return
+
     mail_imap = config.mail_imap
     mail_account = config.mail_account
     mail_pw = config.mail_pw 
@@ -402,6 +417,11 @@ def do_mqtt(data):
    MQTT_KEEPALIVE_INTERVAL = 20
    MQTT_USER = config.mqtt_user
    MQTT_PW = config.mqtt_pw
+
+   if MQTT_HOST == "":
+       return
+   if MQTT_HOST == "YOUR_MQTT_BROKER_IP":
+       return
 
    # Convert it to text? Not sure why I did this but it works. Yay, 1am programming.
    MQTT_MSG = str(data)
