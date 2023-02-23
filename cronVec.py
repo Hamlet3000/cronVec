@@ -1,4 +1,5 @@
 import time
+import datetime
 import random
 import urllib
 import feedparser
@@ -39,6 +40,7 @@ def get_weather(robot):
     if config.api_weather == "YOUR_WEATHER_API_KEY":
         return
        
+    weather = []
     try:
         url = f"http://api.openweathermap.org/data/2.5/forecast?APPID={config.api_weather}&q={config.weather_location}&units={config.temperature}"
         req = urllib.request.Request(
@@ -63,7 +65,6 @@ def get_weather(robot):
         else:
             wind_speed = " kilometers per hour"
 
-        weather = []
         weather.append(f". And now for some weather. Today, it will be {forecast_condition}, with a temperature of {forecast_temp_high} degrees, and wind speeds around {forecast_wind}{wind_speed}.")
         weather.append(f". Later today, it will be {forecast_condition}, with a high of {forecast_temp_high} degrees and a low of {forecast_temp_low} degrees.")
         weather.append(f". Here's your local weather. The high today will be {forecast_temp_high} degrees, and look for a low of around {forecast_temp_low}. Winds will be {forecast_wind}{wind_speed}.")
@@ -304,31 +305,20 @@ def get_email(robot):
 # Result:
 #
 def get_mqtt_info(robot):
-   #voltage = 0
-   #batlevel = 0
-   #charging = 0
-   #docked = 0
-   #status = "error"
 
    battery_state = robot.get_battery_state()
    voltage  = battery_state.battery_volts
-   batlevel = battery_state.battery_level
-   charging = battery_state.is_charging
    docked   = battery_state.is_on_charger_platform
-   status   = get_vector_status(robot)
-   ltime = time.strftime("%d.%m.%Y %H:%M:%S")
+   ltime = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f%z")
 
    # In the openHAB channel, use a jsonpath transform to get specific values like this: JSONPATH:$..voltage
    data = {}
    data['robots'] = []
    data['robots'].append({
-       'name': 'Vector Green',
+       'name': 'Vector',
        'voltage': voltage,
-       'batlevel': batlevel,
-       'charging': charging,
        'docked': docked,
-       'time': ltime,
-       'status': status
+       'time': ltime
    })
                   
    # Configure and publish data to mqtt
@@ -410,9 +400,11 @@ def on_publish(client, userdata, mid):
 #
 def do_mqtt(data):
         
+   name = data['robots'][0]['name']
+
    # define variables for MQTT
    MQTT_HOST = config.mqtt_broker_ip
-   MQTT_TOPIC = "Vector"
+   MQTT_TOPIC = name
    MQTT_PORT = 1883
    MQTT_KEEPALIVE_INTERVAL = 20
    MQTT_USER = config.mqtt_user
@@ -425,6 +417,7 @@ def do_mqtt(data):
 
    # Convert it to text? Not sure why I did this but it works. Yay, 1am programming.
    MQTT_MSG = str(data)
+   #print(MQTT_MSG)
 
    # Initiate MQTT Client
    mqttc = mqtt.Client()
@@ -590,7 +583,9 @@ def get_mintime(reaction):
 def main():
     global LAST_NAME
 
-    with anki_vector.Robot(enable_face_detection=True,
+    args = anki_vector.util.parse_command_args()
+    with anki_vector.Robot(args.serial,
+                           enable_face_detection=True,
                            cache_animation_lists=False) as robot:
 
         # check e-mail
