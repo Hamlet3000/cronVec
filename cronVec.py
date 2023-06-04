@@ -106,7 +106,6 @@ def get_news(robot):
     for post in feed.entries:
         listeTitle.append(post.title)
        
-
     for i in range(news_count):
         if i == 0:
             news = listeTitle[i]
@@ -242,6 +241,32 @@ def get_greeting(robot):
     
     to_say = random.choice(text)
     say_text(robot, to_say)
+
+###############################################################################
+# get_congratulation --
+#   lets Vecor greet you
+#
+# Arguments:
+#   robot = Vector object
+#
+# Result:
+#
+def get_congratulation(robot):
+
+    if config.birthday == "":
+        return
+   
+    ldate = datetime.datetime.now().strftime("%d.%m.")
+    con_name = config.birthday.split(":")[0]
+    con_date = config.birthday.split(":")[1]
+    if ldate == con_date and LAST_NAME == con_name:
+        text = []
+        text.append("Hey REPLACENAMEVAR, I wish you a great birthday! Enjoy the day and let yourself celebrate properly!")
+    
+        to_say = random.choice(text)
+        say_text(robot, to_say)
+        #robot.anim.play_animation('anim_holiday_hny_fireworks_01')
+        robot.anim.play_animation('anim_holiday_hyn_confetti_01')
 
 ###############################################################################
 # get_mail --
@@ -499,19 +524,20 @@ def say_text(robot, to_say):
 #
 # Arguments:
 #   robot = Vector object
-#   arg_name = could be: pass, greeting, time, joke, fact, news, weather
+#   arg_name = could be: pass, greeting, time, joke, fact, news, weather, congratulate
 #
 # Result:
 #
 def run_behavior(robot, arg_name):
 
-    if arg_name == "pass"     : return
-    if arg_name == "weather"  : get_weather(robot)
-    if arg_name == "time"     : get_time(robot) 
-    if arg_name == "fact"     : get_fact(robot)
-    if arg_name == "joke"     : get_joke(robot)
-    if arg_name == "news"     : get_news(robot)
-    if arg_name == "greeting" : get_greeting(robot)
+    if arg_name == "pass"         : return
+    if arg_name == "weather"      : get_weather(robot)
+    if arg_name == "time"         : get_time(robot) 
+    if arg_name == "fact"         : get_fact(robot)
+    if arg_name == "joke"         : get_joke(robot)
+    if arg_name == "news"         : get_news(robot)
+    if arg_name == "greeting"     : get_greeting(robot)
+    if arg_name == "congratulate" : get_congratulation(robot)
 
 
 ###############################################################################
@@ -519,7 +545,7 @@ def run_behavior(robot, arg_name):
 #   checks if the action may be executed
 #
 # Arguments:
-#   reaction = could be: greeting, time, joke, fact, news, weather
+#   reaction = could be: greeting, time, joke, fact, news, weather, congratulate
 #
 # Result:
 #
@@ -535,7 +561,8 @@ def is_allowed(reaction):
                   "joke" : 0,
                   "fact" : 0,
                   "time" : 0,
-                  "weather" : 0}
+                  "weather" : 0,
+                  "congratulate" : 0}
 
     timediff = timestamp - timedict[reaction]
     mintime = get_mintime(reaction)
@@ -552,7 +579,7 @@ def is_allowed(reaction):
 #   the minimum time that must elapse to perform the same action again
 #
 # Arguments:
-#   reaction = could be: greeting, time, joke, fact, news, weather
+#   reaction = could be: greeting, time, joke, fact, news, weather, congratulate
 #
 # Result:
 #   time in seconds
@@ -570,6 +597,8 @@ def get_mintime(reaction):
         return 1800 # 30 minutes
     elif reaction == "weather":
         return 1800 # 30 minutes
+    elif reaction == "congratulate":
+        return 86400 # 24 hours
 
 
 ###############################################################################
@@ -616,7 +645,7 @@ def main():
                 wake_up(robot)
 
         # do random stuff
-        reaction = ["greeting", "news", "joke", "fact", "time", "weather"]
+        reaction = ["greeting", "news", "joke", "fact", "time", "weather", "congratulate"]
         rnd_reaction = random.choice(reaction)
         if is_allowed(rnd_reaction):
            run_behavior(robot, rnd_reaction)
